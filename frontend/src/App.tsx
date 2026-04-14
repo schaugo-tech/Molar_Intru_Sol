@@ -10,7 +10,7 @@ const defaultInputs: InverseRecoInputs = {
   alveolar_height: 0.65,
   target_intrusion_mm: undefined,
   risk_limit_kpa: undefined,
-  score_weights: { target: 0.5, risk: 0.35, side: 0.15 },
+  score_weights: { target: 0.0, risk: 0.5, side: 0.5 },
 }
 
 export default function App() {
@@ -56,7 +56,7 @@ export default function App() {
       牙槽骨高度：${(inputs.alveolar_height * 100).toFixed(0)}%<br/>
       目标压低量：${inputs.target_intrusion_mm?.toFixed(2) ?? '默认 0.10'} mm<br/>
       风险上限：${inputs.risk_limit_kpa?.toFixed(0) ?? '默认 20'} kPa<br/>
-      权重：target=${(inputs.score_weights?.target ?? 0.5).toFixed(2)}, risk=${(inputs.score_weights?.risk ?? 0.35).toFixed(2)}, side=${(inputs.score_weights?.side ?? 0.15).toFixed(2)}
+      权重：target=${(inputs.score_weights?.target ?? 0.0).toFixed(2)}, risk=${(inputs.score_weights?.risk ?? 0.5).toFixed(2)}, side=${(inputs.score_weights?.side ?? 0.5).toFixed(2)}
     </div>
     <h2>推荐结论</h2>
     <div class='box'>
@@ -72,7 +72,7 @@ export default function App() {
       ${result.alternatives.map((x, i) => `<tr><td>${i + 1}</td><td>${x.material}</td><td>${x.planned_intrusion_mm.toFixed(3)} mm</td><td>${x.ComprehensiveScore.toFixed(2)}</td></tr>`).join('')}
     </tbody></table>
     <h2>图表证据（3D/2D）</h2>
-    <div class='grid'>${imgs.map((src, i) => `<div><img class='img' src='${src}'/><div style='font-size:12px;color:#5f6f8e;margin-top:4px'>图 ${i + 1}</div></div>`).join('')}</div>
+    <div class='grid'>${['综合评分3D','PDL极值3D','17牙压低量3D','17牙近远中位移3D','综合评分2D','PDL极值2D'].map((t, i) => imgs[i] ? `<div style='break-inside:avoid'><div style='font-size:13px;font-weight:600;color:#344f7a;margin:0 0 6px'>${t}</div><img class='img' src='${imgs[i]}'/></div>` : '').join('')}</div>
     </body></html>`
 
     const w = window.open('', '_blank')

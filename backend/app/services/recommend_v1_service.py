@@ -143,8 +143,10 @@ class RecommendV1Service:
         return (arr - arr.min()) / den
 
     def build_candidate_table(self, inputs: InverseRecoInputs, search_points: int = 301) -> pd.DataFrame:
-        sgrid = np.linspace(float(self.steps.min()), float(self.steps.max()), int(search_points))
+        step_unit = 0.05
+        sgrid = np.arange(float(self.steps.min()), float(self.steps.max()) + 1e-9, step_unit)
         target_intrusion = 0.10 if inputs.target_intrusion_mm is None else float(inputs.target_intrusion_mm)
+        target_intrusion = float(np.clip(target_intrusion, 0.05, 0.20))
         risk_limit = 20.0 if inputs.risk_limit_kpa is None else float(inputs.risk_limit_kpa)
         rows: List[Dict[str, Any]] = []
         for material in MATERIALS:
@@ -176,7 +178,7 @@ class RecommendV1Service:
         cand['phi_side'] = self._norm(cand['AbsDisp_X_17'])
         cand['score_side'] = 1.0 - cand['phi_side']
 
-        weights = inputs.score_weights or {'target': 0.50, 'risk': 0.35, 'side': 0.15}
+        weights = inputs.score_weights or {'target': 0.0, 'risk': 0.50, 'side': 0.50}
         w_target = float(weights.get('target', 0.50))
         w_risk = float(weights.get('risk', 0.35))
         w_side = float(weights.get('side', 0.15))
@@ -191,12 +193,19 @@ class RecommendV1Service:
         self._validate_input(scalars)
         cand = self.build_candidate_table(scalars, search_points=search_points)
         target_intrusion = 0.10 if scalars.target_intrusion_mm is None else float(scalars.target_intrusion_mm)
-        min_step = float(np.interp(target_intrusion, [0.02, 0.25], [float(self.steps.min()), float(self.steps.max())]))
+        target_intrusion = float(np.clip(target_intrusion, 0.05, 0.20))
+        min_step = float(np.interp(target_intrusion, [0.05, 0.20], [float(self.steps.min()), float(self.steps.max())]))
         cand = cand[cand['planned_intrusion_mm'] >= min_step - 1e-9].copy() if not cand.empty else cand
 
         feasible = cand[cand['within_risk_limit']]
         use_feasible = len(feasible) > 0
-        pool = feasible if use_feasible else cand
+        if use_feasible:
+            pool = feasible
+        else:
+            pool = cand.copy()
+            pool['risk_excess'] = pool['PDL_max (kPa)'] - (20.0 if scalars.risk_limit_kpa is None else float(scalars.risk_limit_kpa))
+            pool = pool.sort_values(['risk_excess', 'PDL_max (kPa)', 'ComprehensiveScore'], ascending=[True, True, False])
+
         best = pool.iloc[0].to_dict()
         alts = pool.iloc[1:4].to_dict('records')
 
@@ -216,11 +225,11 @@ class RecommendV1Service:
             'charts': charts,
             'scoring_formula': {
                 'comprehensive_score': '100 * (w_target*score_target + w_risk*score_risk + w_side*score_side)',
-                'score_target': '0.7*clip(Disp_Z_17/target,0,1)+0.2*norm(Disp_Z_17)+0.1*target_scaled*norm(step)，默认target=0.10mm',
+                'score_target': '0.7*clip(Disp_Z_17/target,0,1)+0.2*norm(Disp_Z_17)+0.1*target_scaled*norm(step), target范围[0.05,0.20]',
                 'score_risk': 'sigmoid(-(PDL_max-risk_limit)/sigma_risk)，默认risk_limit=20kPa',
                 'score_side': '1 - norm(|Disp_X_17|)（越接近0越优）',
                 'defaults': {'target_intrusion_mm': 0.10, 'risk_limit_kpa': 20.0},
-                'weights_used': scalars.score_weights or {'target': 0.50, 'risk': 0.35, 'side': 0.15},
+                'weights_used': scalars.score_weights or {'target': 0.0, 'risk': 0.50, 'side': 0.50},
             },
             'grid': cand.to_dict('records'),
         }

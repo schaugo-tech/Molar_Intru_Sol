@@ -7,9 +7,9 @@ type Props = {
 }
 
 const MAT_COLORS: Record<string, string> = {
-  TPU: '#49a8ff',
-  Multi: '#79e199',
-  PETG: '#ff8383',
+  TPU: '#2d7bff',
+  Multi: '#1fcf82',
+  PETG: '#ff7b32',
 }
 
 function flattenSurface(payload: SurfacePayload, material: string): [number, number, number][] {
@@ -44,8 +44,8 @@ function buildSurfaceOption(title: string, zName: string, surfaces: SurfacePaylo
       type: 'surface',
       name: `${m} 曲面`,
       data,
-      wireframe: { show: false },
-      itemStyle: { opacity: 0.52, color: MAT_COLORS[m] },
+      wireframe: { show: true, lineStyle: { color: 'rgba(255,255,255,0.12)' } },
+      itemStyle: { opacity: 0.40, color: MAT_COLORS[m] },
       shading: 'lambert',
     })
   })
@@ -69,13 +69,13 @@ function buildSurfaceOption(title: string, zName: string, surfaces: SurfacePaylo
     title: { text: title, left: 10, top: 8, textStyle: { color: '#e9f1ff', fontSize: 14 } },
     tooltip: { formatter: (p: any) => `${p.seriesName}<br/>step=${p.value?.[0]?.toFixed?.(4)} mm<br/>height=${(p.value?.[1] * 100)?.toFixed?.(0)}%<br/>${zName}=${p.value?.[2]?.toFixed?.(4)}` },
     legend: { show: false },
-    xAxis3D: { type: 'value', name: '设计步距(mm)', min: range.minX, max: range.maxX, nameGap: 18, axisLabel: { color: '#d6e3fb', margin: 6 }, axisLine: { lineStyle: { color: '#7f95bb' } }, splitLine: { lineStyle: { color: 'rgba(180,200,235,0.10)' } } },
-    yAxis3D: { type: 'value', name: '牙槽骨高度', min: range.minY, max: range.maxY, nameGap: 18, axisLabel: { color: '#d6e3fb', margin: 6, formatter: (v: number) => `${Math.round(v * 100)}%` }, axisLine: { lineStyle: { color: '#7f95bb' } }, splitLine: { lineStyle: { color: 'rgba(180,200,235,0.10)' } } },
-    zAxis3D: { type: 'value', name: zName, nameGap: 12, axisLabel: { color: '#d6e3fb', margin: 6 }, axisLine: { lineStyle: { color: '#7f95bb' } }, splitLine: { lineStyle: { color: 'rgba(180,200,235,0.10)' } } },
+    xAxis3D: { type: 'value', name: '设计步距(mm)', min: range.minX, max: range.maxX, nameGap: 18, nameTextStyle: { color: '#dce8ff', fontSize: 11 }, axisLabel: { color: '#d6e3fb', margin: 8 }, axisLine: { lineStyle: { color: '#6f84a8' } }, splitLine: { lineStyle: { color: 'rgba(170,190,220,0.08)' } } },
+    yAxis3D: { type: 'value', name: '牙槽骨高度', min: range.minY, max: range.maxY, nameGap: 18, nameTextStyle: { color: '#dce8ff', fontSize: 11 }, axisLabel: { color: '#d6e3fb', margin: 8, formatter: (v: number) => `${Math.round(v * 100)}%` }, axisLine: { lineStyle: { color: '#6f84a8' } }, splitLine: { lineStyle: { color: 'rgba(170,190,220,0.08)' } } },
+    zAxis3D: { type: 'value', name: zName, nameGap: 6, nameTextStyle: { color: '#dce8ff', fontSize: 11 }, axisLabel: { color: '#d6e3fb', margin: 8 }, axisLine: { lineStyle: { color: '#6f84a8' } }, splitLine: { lineStyle: { color: 'rgba(170,190,220,0.08)' } } },
     grid3D: {
-      boxWidth: 92,
-      boxDepth: 78,
-      boxHeight: 62,
+      boxWidth: 86,
+      boxDepth: 72,
+      boxHeight: 56,
       environment: '#0f1a2c',
       viewControl: {
         projection: 'orthographic',
@@ -86,7 +86,7 @@ function buildSurfaceOption(title: string, zName: string, surfaces: SurfacePaylo
         zoomSensitivity: 0,
         panSensitivity: 0,
       },
-      light: { main: { intensity: 1.05 }, ambient: { intensity: 0.58 } },
+      light: { main: { intensity: 0.92 }, ambient: { intensity: 0.45 } },
     },
     series,
     backgroundColor: 'transparent',

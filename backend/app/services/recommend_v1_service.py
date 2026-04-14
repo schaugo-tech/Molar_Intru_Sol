@@ -63,26 +63,33 @@ class RecommendV1Service:
 
     @staticmethod
     def _resolve_data_path(backend_dir: Path) -> Path:
-        configured = os.getenv('INVERSE_DATA_XLSX_PATH', '').strip()
+        configured = os.getenv('INVERSE_DATA_PATH', '').strip() or os.getenv('INVERSE_DATA_XLSX_PATH', '').strip()
         if configured:
             p = Path(configured).expanduser()
             if not p.is_absolute():
                 p = backend_dir / p
             if p.exists():
                 return p
-            raise FileNotFoundError(f'INVERSE_DATA_XLSX_PATH 指向文件不存在: {p}')
+            raise FileNotFoundError(f'INVERSE_DATA_PATH/INVERSE_DATA_XLSX_PATH 指向文件不存在: {p}')
 
-        default_path = backend_dir / 'data' / 'P328101E02_仿真实验数据_260414.xlsx'
-        if default_path.exists():
-            return default_path
+        candidates = [
+            backend_dir / 'data' / 'P328101E02_仿真实验数据_260414.csv',
+            backend_dir / 'data' / 'P328101E02_仿真实验数据_260414.xlsx',
+        ]
+        for default_path in candidates:
+            if default_path.exists():
+                return default_path
         raise FileNotFoundError(
-            f'未找到默认数据文件: {default_path}。请在 backend/.env 配置 INVERSE_DATA_XLSX_PATH。'
+            f'未找到默认数据文件: {candidates[0]}。请在 backend/.env 配置 INVERSE_DATA_PATH。'
         )
 
     def _load_data(self) -> pd.DataFrame:
         if not self.data_path.exists():
             raise FileNotFoundError(f'未找到数据文件：{self.data_path}')
-        df = pd.read_excel(self.data_path)
+        if self.data_path.suffix.lower() == '.csv':
+            df = pd.read_csv(self.data_path)
+        else:
+            df = pd.read_excel(self.data_path)
         required = {'Aligner material', 'Alveolar height', 'Planned Intrusion (mm)', 'PDL_max (kPa)', 'Disp_Z_17', 'Disp_X_17', 'Disp_Y_17'}
         missing = [c for c in required if c not in df.columns]
         if missing:

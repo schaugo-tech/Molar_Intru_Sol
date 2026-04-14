@@ -1,14 +1,13 @@
 # Data directory
 
-`P328101E02_仿真实验数据_260414.xlsx` is expected at runtime, but is intentionally not tracked in git.
+默认逆向推荐数据文件：
 
-## Put your file here
+- `backend/data/P328101E02_仿真实验数据_260414.csv`（推荐）
 
-- Path: `backend/data/P328101E02_仿真实验数据_260414.xlsx`
-- Or set `INVERSE_DATA_XLSX_PATH` in `backend/.env`.
-
-Example:
+也可通过环境变量覆盖：
 
 ```env
-INVERSE_DATA_XLSX_PATH=data/P328101E02_仿真实验数据_260414.xlsx
+INVERSE_DATA_PATH=data/P328101E02_仿真实验数据_260414.csv
 ```
+
+兼容旧变量：`INVERSE_DATA_XLSX_PATH`（不推荐继续使用）。

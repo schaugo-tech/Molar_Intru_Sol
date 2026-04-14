@@ -1,91 +1,69 @@
-export type TreatmentNeedInput = {
-  ahi_band?: 'lt5' | '5to15' | '15to30' | 'gt30'
-}
-
-export type TMJSensitivityInput = {
-  pain_vas?: number
-  joint_state?: 'none' | 'click' | 'lock'
-  mouth_opening_mm?: number
-  mouth_opening_state?: 'normal' | 'mildly_limited' | 'limited'
-}
-
-export type PeriodontalInput = {
-  mobility_state?: 'stable' | 'mild' | 'obvious'
-  bone_loss_state?: 'none' | 'low' | 'medium' | 'high'
-}
-
-export type OcclusalNeedInput = {
-  deep_overbite: boolean
-  occlusal_interference: boolean
-  anterior_crossbite: boolean
-}
-
-export type FrontendInputs = {
-  treatment_need: TreatmentNeedInput
-  tmj_sensitivity: TMJSensitivityInput
-  periodontal: PeriodontalInput
-  occlusal_need: OcclusalNeedInput
+export type InverseRecoInputs = {
+  alveolar_height: number
+  target_intrusion_mm?: number
+  risk_limit_kpa?: number
+  score_weights?: { target?: number; risk?: number; side?: number }
 }
 
 export type RecommendV1Request = {
-  inputs: FrontendInputs
-  mp_grid?: number[]
-  vo_grid?: number[]
+  inputs: InverseRecoInputs
+  search_points?: number
+  surface_grid_size?: number
 }
 
 export type RecommendPoint = {
-  mp: number
-  vo: number
-  utility: number
-  raw_utility?: number
-  benefit_mp: number
-  benefit_vo: number
-  raw_tmj?: number
-  raw_low?: number
-  raw_up?: number
-  r_tmj: number
-  r_pdl: number
-  feasible: boolean
-  limit_factor: 'feasible' | 'tmj' | 'pdl'
+  material: 'TPU' | 'Multi' | 'PETG' | string
+  planned_intrusion_mm: number
+  Disp_Z_17: number
+  Disp_X_17: number
+  Disp_Y_17: number
+  ['PDL_max (kPa)']: number
+  ComprehensiveScore: number
+  within_risk_limit: boolean
+  surface_position?: {
+    height_value: number
+    step_value: number
+    rank_percentile: number
+    rank_label: string
+    note: string
+  }
+}
+
+export type SurfacePayload = {
+  [material: string]: {
+    x_heights: number[]
+    y_planned_intrusion: number[]
+    z_values: number[][]
+  }
 }
 
 export type RecommendV1Response = {
   status: string
-  scalars: { d: number; j: number; p: number; o: number; mp_target_pct: number; vo_target_mm: number; vo_need_label: string }
   best: RecommendPoint
   alternatives: RecommendPoint[]
   charts: {
-    best: RecommendPoint
-    alternatives: RecommendPoint[]
-    heatmaps: {
-      utility: [number, number, number][]
-      limit_factor: [number, number, number][]
+    surfaces: {
+      score: SurfacePayload
+      pdl_max: SurfacePayload
+      disp_z17: SurfacePayload
+      disp_x17: SurfacePayload
     }
-    radar: Array<{
-      name: string
-      mp: number
-      vo: number
-      values: Record<string, number>
+    recommend_points: Record<string, Array<{ name: string; material: string; value: [number, number, number] }>>
+    curves_2d: Array<{
+      material: string
+      step_vs_score: [number, number][]
+      step_vs_pdl: [number, number][]
+      step_vs_z17: [number, number][]
+      step_vs_x17: [number, number][]
     }>
-    curves: {
-      fix_vo_vary_mp: RecommendPoint[]
-      fix_mp_vary_vo: RecommendPoint[]
-    }
-    surface3d: {
-      utility: [number, number, number][]
-      tmj: [number, number, number][]
-      pdl: [number, number, number][]
-      recommend_points: {
-        utility: Array<{ name: string; value: [number, number, number] }>
-        tmj: Array<{ name: string; value: [number, number, number] }>
-        pdl: Array<{ name: string; value: [number, number, number] }>
-      }
+    motion_payload: {
+      material: string
+      alveolar_height: number
+      planned_intrusion_mm: number
+      note: string
+      teeth: Array<{ tooth_id: number; disp_x_mm: number; disp_y_mm: number; disp_z_mm: number }>
     }
   }
-  option_templates?: {
-    utility_surface3d_option: any
-    tmj_surface3d_option: any
-    pdl_surface3d_option: any
-  }
+  scoring_formula: Record<string, any>
   meta: any
 }

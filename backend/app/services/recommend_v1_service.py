@@ -178,7 +178,7 @@ class RecommendV1Service:
         cand['phi_side'] = self._norm(cand['AbsDisp_X_17'])
         cand['score_side'] = 1.0 - cand['phi_side']
 
-        weights = inputs.score_weights or {'target': 0.0, 'risk': 0.50, 'side': 0.50}
+        weights = inputs.score_weights or {'target': 0.50, 'risk': 0.50, 'side': 0.50}
         w_target = float(weights.get('target', 0.50))
         w_risk = float(weights.get('risk', 0.35))
         w_side = float(weights.get('side', 0.15))
@@ -208,6 +208,14 @@ class RecommendV1Service:
 
         best = pool.iloc[0].to_dict()
         alts = pool.iloc[1:4].to_dict('records')
+        if len(alts) < 2:
+            fallback = cand[cand['planned_intrusion_mm'] != best['planned_intrusion_mm']].to_dict('records')
+            for item in fallback:
+                if len(alts) >= 2:
+                    break
+                if all(not (a['material'] == item['material'] and abs(a['planned_intrusion_mm'] - item['planned_intrusion_mm']) < 1e-9) for a in alts):
+                    alts.append(item)
+        alts = alts[:3]
 
         best['surface_position'] = {
             'height_value': scalars.alveolar_height,
@@ -229,7 +237,7 @@ class RecommendV1Service:
                 'score_risk': 'sigmoid(-(PDL_max-risk_limit)/sigma_risk)，默认risk_limit=20kPa',
                 'score_side': '1 - norm(|Disp_X_17|)（越接近0越优）',
                 'defaults': {'target_intrusion_mm': 0.10, 'risk_limit_kpa': 20.0},
-                'weights_used': scalars.score_weights or {'target': 0.0, 'risk': 0.50, 'side': 0.50},
+                'weights_used': scalars.score_weights or {'target': 0.50, 'risk': 0.50, 'side': 0.50},
             },
             'grid': cand.to_dict('records'),
         }

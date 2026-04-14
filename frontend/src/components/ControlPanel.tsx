@@ -13,7 +13,7 @@ export default function ControlPanel({ inputs, loading, onInputsChange, onAnalyz
   const heightPct = Math.round(inputs.alveolar_height * 100)
   const hasTarget = inputs.target_intrusion_mm !== undefined
   const hasRisk = inputs.risk_limit_kpa !== undefined
-  const w = inputs.score_weights ?? { target: 0.0, risk: 0.5, side: 0.5 }
+  const w = inputs.score_weights ?? { target: 0.5, risk: 0.5, side: 0.5 }
 
   return (
     <div className="control-stack">
@@ -41,7 +41,7 @@ export default function ControlPanel({ inputs, loading, onInputsChange, onAnalyz
       </PanelCard>
 
       <PanelCard title="综合评分权重（步进 0.05）">
-        <label className="field"><span>目标达成权重：{(w.target ?? 0.0).toFixed(2)}</span><input type="range" min={0.05} max={0.9} step={0.05} value={w.target ?? 0.0} onChange={(e) => onInputsChange({ ...inputs, score_weights: { ...w, target: Number(e.target.value) } })} /></label>
+        <label className="field"><span>目标达成权重：{(w.target ?? 0.5).toFixed(2)}</span><input type="range" min={0.05} max={0.9} step={0.05} value={w.target ?? 0.5} onChange={(e) => onInputsChange({ ...inputs, score_weights: { ...w, target: Number(e.target.value) } })} /></label>
         <label className="field"><span>风险控制权重：{(w.risk ?? 0.5).toFixed(2)}</span><input type="range" min={0.05} max={0.9} step={0.05} value={w.risk ?? 0.5} onChange={(e) => onInputsChange({ ...inputs, score_weights: { ...w, risk: Number(e.target.value) } })} /></label>
         <label className="field"><span>副作用权重：{(w.side ?? 0.5).toFixed(2)}</span><input type="range" min={0.05} max={0.9} step={0.05} value={w.side ?? 0.5} onChange={(e) => onInputsChange({ ...inputs, score_weights: { ...w, side: Number(e.target.value) } })} /></label>
       </PanelCard>

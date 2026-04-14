@@ -51,7 +51,7 @@ function buildSurfaceOption(title: string, zName: string, surfaces: SurfacePaylo
   })
 
   ;['TPU', 'Multi', 'PETG'].forEach((m) => {
-    const sub = points.filter((p) => p.material === m)
+    const sub = points.filter((p) => p.material === m && p.name === '推荐')
     if (!sub.length) return
     series.push({
       type: 'scatter3D',
@@ -89,7 +89,7 @@ function buildSurfaceOption(title: string, zName: string, surfaces: SurfacePaylo
       light: { main: { intensity: 0.92 }, ambient: { intensity: 0.45 } },
     },
     series,
-    backgroundColor: 'transparent',
+    backgroundColor: '#0f1a2c',
   }
 }
 
@@ -116,7 +116,7 @@ function buildLineOption(title: string, yName: string, data: RecommendV1Response
       data: row[keyName],
       lineStyle: { width: 2, color: MAT_COLORS[row.material] },
     })),
-    backgroundColor: 'transparent',
+    backgroundColor: '#0f1a2c',
   }
 }
 
@@ -133,6 +133,7 @@ export default function ChartsPanel({ data }: Props) {
   const x173d = buildSurfaceOption('17牙近远中位移 3D 拟合曲面', 'Disp_X_17(mm)', data.charts.surfaces.disp_x17, data.charts.recommend_points.disp_x17)
 
   const score2d = buildLineOption('2D: 步距-综合评分（多材料叠加）', 'Score', data.charts.curves_2d, 'step_vs_score')
+  const z172d = buildLineOption('2D: 步距-17牙压低实现量', 'Disp_Z_17(mm)', data.charts.curves_2d, 'step_vs_z17')
   const pdl2d = buildLineOption('2D: 步距-PDL应力', 'PDL_max(kPa)', data.charts.curves_2d, 'step_vs_pdl')
 
   return (
@@ -142,6 +143,7 @@ export default function ChartsPanel({ data }: Props) {
       <PanelCard title="17牙压低量 3D"><ReactECharts option={z173d} style={{ height: h3d }} /></PanelCard>
       <PanelCard title="17牙近远中位移 3D"><ReactECharts option={x173d} style={{ height: h3d }} /></PanelCard>
       <PanelCard title="综合评分 2D"><ReactECharts option={score2d} style={{ height: h2d }} /></PanelCard>
+      <PanelCard title="17牙压低实现量 2D"><ReactECharts option={z172d} style={{ height: h2d }} /></PanelCard>
       <PanelCard title="PDL 2D"><ReactECharts option={pdl2d} style={{ height: h2d }} /></PanelCard>
     </div>
   )

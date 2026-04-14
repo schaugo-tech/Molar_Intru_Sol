@@ -10,7 +10,7 @@ const defaultInputs: InverseRecoInputs = {
   alveolar_height: 0.65,
   target_intrusion_mm: undefined,
   risk_limit_kpa: undefined,
-  score_weights: { target: 0.0, risk: 0.5, side: 0.5 },
+  score_weights: { target: 0.5, risk: 0.5, side: 0.5 },
 }
 
 export default function App() {
@@ -57,7 +57,7 @@ export default function App() {
       h1{color:#1f4c96} h2{color:#2a3d61;margin-top:20px}
       .box{border:1px solid #d8e3f7;background:#f8fbff;padding:12px;border-radius:10px;line-height:1.7}
       .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-      .img{width:100%;border:1px solid #d2deef;border-radius:8px}
+      .img{width:100%;height:210px;object-fit:contain;border:1px solid #d2deef;border-radius:8px;background:#0f1a2c}
       table{width:100%;border-collapse:collapse} th,td{border:1px solid #d2deef;padding:8px;font-size:12px}
       th{background:#ebf2ff}
     </style></head><body>
@@ -67,7 +67,7 @@ export default function App() {
       牙槽骨高度：${(inputs.alveolar_height * 100).toFixed(0)}%<br/>
       目标压低量：${inputs.target_intrusion_mm?.toFixed(2) ?? '默认 0.10'} mm<br/>
       风险上限：${inputs.risk_limit_kpa?.toFixed(0) ?? '默认 20'} kPa<br/>
-      权重：target=${(inputs.score_weights?.target ?? 0.0).toFixed(2)}, risk=${(inputs.score_weights?.risk ?? 0.5).toFixed(2)}, side=${(inputs.score_weights?.side ?? 0.5).toFixed(2)}
+      权重：target=${(inputs.score_weights?.target ?? 0.5).toFixed(2)}, risk=${(inputs.score_weights?.risk ?? 0.5).toFixed(2)}, side=${(inputs.score_weights?.side ?? 0.5).toFixed(2)}
     </div>
     <h2>推荐结论</h2>
     <div class='box'>

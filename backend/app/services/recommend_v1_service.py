@@ -144,6 +144,8 @@ class RecommendV1Service:
 
     def build_candidate_table(self, inputs: InverseRecoInputs, search_points: int = 301) -> pd.DataFrame:
         sgrid = np.linspace(float(self.steps.min()), float(self.steps.max()), int(search_points))
+        target_intrusion = 0.10 if inputs.target_intrusion_mm is None else float(inputs.target_intrusion_mm)
+        risk_limit = 20.0 if inputs.risk_limit_kpa is None else float(inputs.risk_limit_kpa)
         rows: List[Dict[str, Any]] = []
         for material in MATERIALS:
             for planned in sgrid:
@@ -160,20 +162,16 @@ class RecommendV1Service:
                 })
         cand = pd.DataFrame(rows)
 
-        cand['score_target'] = self._norm(cand['Disp_Z_17'])
-        cand['target_deviation_mm'] = np.nan
-        if inputs.target_intrusion_mm is not None:
-            sigma = max(0.01, 0.12 * float(inputs.target_intrusion_mm))
-            diff = (cand['Disp_Z_17'] - inputs.target_intrusion_mm) / sigma
-            cand['score_target'] = 1.0 / (1.0 + np.exp(-diff))
-            cand['target_deviation_mm'] = cand['Disp_Z_17'] - inputs.target_intrusion_mm
+        norm_z = self._norm(cand['Disp_Z_17'])
+        norm_step = self._norm(cand['planned_intrusion_mm'])
+        ratio = np.clip(cand['Disp_Z_17'] / max(target_intrusion, 1e-6), 0.0, 1.0)
+        target_scaled = float(np.clip((target_intrusion - 0.05) / 0.15, 0.0, 1.0))
+        cand['score_target'] = np.clip(0.70 * ratio + 0.20 * norm_z + 0.10 * target_scaled * norm_step, 0.0, 1.0)
+        cand['target_deviation_mm'] = cand['Disp_Z_17'] - target_intrusion
 
-        cand['within_risk_limit'] = True
-        cand['score_risk'] = 1.0 - self._norm(cand['PDL_max (kPa)'])
-        if inputs.risk_limit_kpa is not None:
-            sigma_risk = max(1.0, 0.12 * float(inputs.risk_limit_kpa))
-            cand['score_risk'] = 1.0 / (1.0 + np.exp((cand['PDL_max (kPa)'] - inputs.risk_limit_kpa) / sigma_risk))
-            cand['within_risk_limit'] = cand['PDL_max (kPa)'] <= inputs.risk_limit_kpa
+        sigma_risk = max(1.0, 0.12 * risk_limit)
+        cand['score_risk'] = 1.0 / (1.0 + np.exp((cand['PDL_max (kPa)'] - risk_limit) / sigma_risk))
+        cand['within_risk_limit'] = cand['PDL_max (kPa)'] <= risk_limit
 
         cand['phi_side'] = self._norm(cand['AbsDisp_X_17'])
         cand['score_side'] = 1.0 - cand['phi_side']
@@ -192,7 +190,11 @@ class RecommendV1Service:
     def recommend(self, scalars: InverseRecoInputs, search_points: int = 301, surface_grid_size: int = 42) -> Dict[str, Any]:
         self._validate_input(scalars)
         cand = self.build_candidate_table(scalars, search_points=search_points)
-        feasible = cand[cand['within_risk_limit']] if scalars.risk_limit_kpa is not None else cand
+        target_intrusion = 0.10 if scalars.target_intrusion_mm is None else float(scalars.target_intrusion_mm)
+        min_step = float(np.interp(target_intrusion, [0.05, 0.20], [float(self.steps.min()), float(self.steps.max())]))
+        cand = cand[cand['planned_intrusion_mm'] >= min_step - 1e-9].copy() if not cand.empty else cand
+
+        feasible = cand[cand['within_risk_limit']]
         use_feasible = len(feasible) > 0
         pool = feasible if use_feasible else cand
         best = pool.iloc[0].to_dict()
@@ -214,9 +216,10 @@ class RecommendV1Service:
             'charts': charts,
             'scoring_formula': {
                 'comprehensive_score': '100 * (w_target*score_target + w_risk*score_risk + w_side*score_side)',
-                'score_target': 'sigmoid((Disp_Z_17-target)/sigma_target) 或归一化 Disp_Z_17（越大越优）',
-                'score_risk': 'sigmoid(-(PDL_max-risk_limit)/sigma_risk) 或反向归一化 PDL_max（越小越优）',
+                'score_target': '0.7*clip(Disp_Z_17/target,0,1)+0.2*norm(Disp_Z_17)+0.1*target_scaled*norm(step)，默认target=0.10mm',
+                'score_risk': 'sigmoid(-(PDL_max-risk_limit)/sigma_risk)，默认risk_limit=20kPa',
                 'score_side': '1 - norm(|Disp_X_17|)（越接近0越优）',
+                'defaults': {'target_intrusion_mm': 0.10, 'risk_limit_kpa': 20.0},
                 'weights_used': scalars.score_weights or {'target': 0.50, 'risk': 0.35, 'side': 0.15},
             },
             'grid': cand.to_dict('records'),

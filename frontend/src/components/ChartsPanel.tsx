@@ -68,14 +68,14 @@ function buildSurfaceOption(title: string, zName: string, surfaces: SurfacePaylo
   return {
     title: { text: title, left: 10, top: 8, textStyle: { color: '#e9f1ff', fontSize: 14 } },
     tooltip: { formatter: (p: any) => `${p.seriesName}<br/>step=${p.value?.[0]?.toFixed?.(4)} mm<br/>height=${(p.value?.[1] * 100)?.toFixed?.(0)}%<br/>${zName}=${p.value?.[2]?.toFixed?.(4)}` },
-    legend: { bottom: 8, textStyle: { color: '#dfe6ff' } },
+    legend: { show: false },
     xAxis3D: { type: 'value', name: '设计步距(mm)', min: range.minX, max: range.maxX, axisLabel: { color: '#e5eeff' }, axisLine: { lineStyle: { color: '#9fb6dd' } } },
     yAxis3D: { type: 'value', name: '牙槽骨高度', min: range.minY, max: range.maxY, axisLabel: { color: '#e5eeff', formatter: (v: number) => `${Math.round(v * 100)}%` }, axisLine: { lineStyle: { color: '#9fb6dd' } } },
     zAxis3D: { type: 'value', name: zName, axisLabel: { color: '#e5eeff' }, axisLine: { lineStyle: { color: '#9fb6dd' } } },
     grid3D: {
-      boxWidth: 110,
-      boxDepth: 92,
-      boxHeight: 75,
+      boxWidth: 92,
+      boxDepth: 78,
+      boxHeight: 62,
       environment: '#0f1a2c',
       viewControl: {
         projection: 'orthographic',
@@ -93,12 +93,20 @@ function buildSurfaceOption(title: string, zName: string, surfaces: SurfacePaylo
   }
 }
 
+
+function lineRange(data: RecommendV1Response['charts']['curves_2d'], keyName: 'step_vs_score' | 'step_vs_pdl' | 'step_vs_z17' | 'step_vs_x17') {
+  const points = data.flatMap((row) => row[keyName])
+  const xs = points.map((p) => p[0])
+  return { minX: Math.min(...xs), maxX: Math.max(...xs) }
+}
+
 function buildLineOption(title: string, yName: string, data: RecommendV1Response['charts']['curves_2d'], keyName: 'step_vs_score' | 'step_vs_pdl' | 'step_vs_z17' | 'step_vs_x17') {
+  const rg = lineRange(data, keyName)
   return {
     title: { text: title, left: 10, top: 8, textStyle: { color: '#dfe6ff', fontSize: 14 } },
     tooltip: { trigger: 'axis' },
     legend: { bottom: 4, textStyle: { color: '#dfe6ff' } },
-    xAxis: { type: 'value', name: '设计步距(mm)', axisLabel: { color: '#dbe7ff' }, axisLine: { lineStyle: { color: '#9fb6dd' } } },
+    xAxis: { type: 'value', name: '设计步距(mm)', min: rg.minX, max: rg.maxX, axisLabel: { color: '#dbe7ff' }, axisLine: { lineStyle: { color: '#9fb6dd' } } },
     yAxis: { type: 'value', name: yName, axisLabel: { color: '#dbe7ff' }, axisLine: { lineStyle: { color: '#9fb6dd' } } },
     series: data.map((row) => ({
       name: row.material,
@@ -116,8 +124,8 @@ export default function ChartsPanel({ data }: Props) {
   if (!data) return <PanelCard title="图表区"><div className="compact-note">请先点击“更新推荐”。</div></PanelCard>
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
-  const h3d = isMobile ? 300 : 390
-  const h2d = isMobile ? 240 : 290
+  const h3d = isMobile ? 260 : 320
+  const h2d = isMobile ? 210 : 240
 
   const score3d = buildSurfaceOption('综合评分 3D 拟合曲面（3材料同图）', 'Score', data.charts.surfaces.score, data.charts.recommend_points.score)
   const pdl3d = buildSurfaceOption('PDL应力极值 3D 拟合曲面', 'PDL_max(kPa)', data.charts.surfaces.pdl_max, data.charts.recommend_points.pdl_max)

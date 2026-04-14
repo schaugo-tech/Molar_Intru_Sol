@@ -165,7 +165,7 @@ class RecommendV1Service:
         norm_z = self._norm(cand['Disp_Z_17'])
         norm_step = self._norm(cand['planned_intrusion_mm'])
         ratio = np.clip(cand['Disp_Z_17'] / max(target_intrusion, 1e-6), 0.0, 1.0)
-        target_scaled = float(np.clip((target_intrusion - 0.05) / 0.15, 0.0, 1.0))
+        target_scaled = float(np.clip((target_intrusion - 0.02) / 0.23, 0.0, 1.0))
         cand['score_target'] = np.clip(0.70 * ratio + 0.20 * norm_z + 0.10 * target_scaled * norm_step, 0.0, 1.0)
         cand['target_deviation_mm'] = cand['Disp_Z_17'] - target_intrusion
 
@@ -191,7 +191,7 @@ class RecommendV1Service:
         self._validate_input(scalars)
         cand = self.build_candidate_table(scalars, search_points=search_points)
         target_intrusion = 0.10 if scalars.target_intrusion_mm is None else float(scalars.target_intrusion_mm)
-        min_step = float(np.interp(target_intrusion, [0.05, 0.20], [float(self.steps.min()), float(self.steps.max())]))
+        min_step = float(np.interp(target_intrusion, [0.02, 0.25], [float(self.steps.min()), float(self.steps.max())]))
         cand = cand[cand['planned_intrusion_mm'] >= min_step - 1e-9].copy() if not cand.empty else cand
 
         feasible = cand[cand['within_risk_limit']]

@@ -69,9 +69,9 @@ function buildSurfaceOption(title: string, zName: string, surfaces: SurfacePaylo
     title: { text: title, left: 10, top: 8, textStyle: { color: '#e9f1ff', fontSize: 14 } },
     tooltip: { formatter: (p: any) => `${p.seriesName}<br/>step=${p.value?.[0]?.toFixed?.(4)} mm<br/>height=${(p.value?.[1] * 100)?.toFixed?.(0)}%<br/>${zName}=${p.value?.[2]?.toFixed?.(4)}` },
     legend: { show: false },
-    xAxis3D: { type: 'value', name: '设计步距(mm)', min: range.minX, max: range.maxX, axisLabel: { color: '#e5eeff' }, axisLine: { lineStyle: { color: '#9fb6dd' } } },
-    yAxis3D: { type: 'value', name: '牙槽骨高度', min: range.minY, max: range.maxY, axisLabel: { color: '#e5eeff', formatter: (v: number) => `${Math.round(v * 100)}%` }, axisLine: { lineStyle: { color: '#9fb6dd' } } },
-    zAxis3D: { type: 'value', name: zName, axisLabel: { color: '#e5eeff' }, axisLine: { lineStyle: { color: '#9fb6dd' } } },
+    xAxis3D: { type: 'value', name: '设计步距(mm)', min: range.minX, max: range.maxX, nameGap: 18, axisLabel: { color: '#d6e3fb', margin: 6 }, axisLine: { lineStyle: { color: '#7f95bb' } }, splitLine: { lineStyle: { color: 'rgba(180,200,235,0.10)' } } },
+    yAxis3D: { type: 'value', name: '牙槽骨高度', min: range.minY, max: range.maxY, nameGap: 18, axisLabel: { color: '#d6e3fb', margin: 6, formatter: (v: number) => `${Math.round(v * 100)}%` }, axisLine: { lineStyle: { color: '#7f95bb' } }, splitLine: { lineStyle: { color: 'rgba(180,200,235,0.10)' } } },
+    zAxis3D: { type: 'value', name: zName, nameGap: 12, axisLabel: { color: '#d6e3fb', margin: 6 }, axisLine: { lineStyle: { color: '#7f95bb' } }, splitLine: { lineStyle: { color: 'rgba(180,200,235,0.10)' } } },
     grid3D: {
       boxWidth: 92,
       boxDepth: 78,
@@ -106,8 +106,8 @@ function buildLineOption(title: string, yName: string, data: RecommendV1Response
     title: { text: title, left: 10, top: 8, textStyle: { color: '#dfe6ff', fontSize: 14 } },
     tooltip: { trigger: 'axis' },
     legend: { bottom: 4, textStyle: { color: '#dfe6ff' } },
-    xAxis: { type: 'value', name: '设计步距(mm)', min: rg.minX, max: rg.maxX, axisLabel: { color: '#dbe7ff' }, axisLine: { lineStyle: { color: '#9fb6dd' } } },
-    yAxis: { type: 'value', name: yName, axisLabel: { color: '#dbe7ff' }, axisLine: { lineStyle: { color: '#9fb6dd' } } },
+    xAxis: { type: 'value', name: '设计步距(mm)', min: rg.minX, max: rg.maxX, nameGap: 16, axisLabel: { color: '#dbe7ff' }, axisLine: { lineStyle: { color: '#8aa2c9' } }, splitLine: { lineStyle: { color: 'rgba(160,185,225,0.10)' } } },
+    yAxis: { type: 'value', name: yName, nameGap: 16, axisLabel: { color: '#dbe7ff' }, axisLine: { lineStyle: { color: '#8aa2c9' } }, splitLine: { lineStyle: { color: 'rgba(160,185,225,0.10)' } } },
     series: data.map((row) => ({
       name: row.material,
       type: 'line',

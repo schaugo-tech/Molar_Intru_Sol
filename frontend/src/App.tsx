@@ -14,7 +14,6 @@ const defaultInputs: InverseRecoInputs = {
 }
 
 export default function App() {
-  const [meta, setMeta] = useState<any>(null)
   const [inputs, setInputs] = useState<InverseRecoInputs>(defaultInputs)
   const [result, setResult] = useState<RecommendV1Response | undefined>()
   const [loading, setLoading] = useState(false)
@@ -37,8 +36,20 @@ export default function App() {
 
   const onExportReport = async () => {
     if (!result) return
-    const chartCanvases = Array.from(document.querySelectorAll('.chart-grid canvas')) as HTMLCanvasElement[]
-    const imgs = chartCanvases.map((c) => c.toDataURL('image/png'))
+    const chartRoots = Array.from(document.querySelectorAll('.chart-grid .echarts-for-react')) as HTMLElement[]
+    const imgs = chartRoots.map((root) => {
+      const layers = Array.from(root.querySelectorAll('canvas')) as HTMLCanvasElement[]
+      if (!layers.length) return ''
+      const w = layers[0].width
+      const h = layers[0].height
+      const mix = document.createElement('canvas')
+      mix.width = w
+      mix.height = h
+      const ctx = mix.getContext('2d')
+      if (!ctx) return ''
+      layers.forEach((layer) => ctx.drawImage(layer, 0, 0, w, h))
+      return mix.toDataURL('image/png')
+    }).filter(Boolean)
 
     const html = `<!doctype html><html><head><meta charset='utf-8'/><title>后牙压低推荐报告</title>
     <style>
@@ -83,7 +94,7 @@ export default function App() {
   }
 
   useEffect(() => {
-    fetchRecommendMeta().then(setMeta).catch((e) => setError(`meta 读取失败：${e.message}`))
+    fetchRecommendMeta().catch((e) => setError(`meta 读取失败：${e.message}`))
     run()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -99,8 +110,7 @@ export default function App() {
           <p>输入牙槽骨高度 + 目标压低量/风险上限，输出材料（TPU/Multi/PETG）与设计步距，并给出多曲面证据。</p>
         </div>
         <div className="header-note">
-          <div>引擎版本：{meta?.engine_version ?? '读取中...'}</div>
-          <div className="header-sub">数据：{meta?.data_file ?? '-'}</div>
+          <div>引擎版本：NHY_V260414</div>
           {error ? <div className="header-error">{error}</div> : null}
         </div>
       </header>

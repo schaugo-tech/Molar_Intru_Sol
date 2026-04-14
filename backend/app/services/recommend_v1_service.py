@@ -19,6 +19,7 @@ MATERIAL_MAP = {
 }
 MATERIALS = ['TPU', 'Multi', 'PETG']
 TOOTH_IDS = [17, 16, 15, 14, 13, 12, 11]
+STEP_OPTIONS = [0.05, 0.08, 0.10, 0.13, 0.15, 0.18, 0.20]
 
 
 @dataclass
@@ -143,8 +144,7 @@ class RecommendV1Service:
         return (arr - arr.min()) / den
 
     def build_candidate_table(self, inputs: InverseRecoInputs, search_points: int = 301) -> pd.DataFrame:
-        step_unit = 0.05
-        sgrid = np.arange(float(self.steps.min()), float(self.steps.max()) + 1e-9, step_unit)
+        sgrid = np.array([s for s in STEP_OPTIONS if float(self.steps.min()) - 1e-9 <= s <= float(self.steps.max()) + 1e-9], dtype=float)
         target_intrusion = 0.10 if inputs.target_intrusion_mm is None else float(inputs.target_intrusion_mm)
         target_intrusion = float(np.clip(target_intrusion, 0.05, 0.20))
         risk_limit = 20.0 if inputs.risk_limit_kpa is None else float(inputs.risk_limit_kpa)
@@ -331,7 +331,7 @@ class RecommendV1Service:
 
     def get_meta(self) -> Dict[str, Any]:
         return {
-            'engine_version': 'INVERSE_V2',
+            'engine_version': 'NHY_V260414',
             'materials': MATERIALS,
             'data_file': self.data_path.name,
             'range': {
@@ -339,6 +339,7 @@ class RecommendV1Service:
                 'planned_intrusion_mm': [float(self.steps.min()), float(self.steps.max())],
             },
             'outputs': ['ComprehensiveScore', 'PDL_max (kPa)', 'Disp_Z_17', 'Disp_X_17'],
+            'step_options_mm': [s for s in STEP_OPTIONS if float(self.steps.min()) - 1e-9 <= s <= float(self.steps.max()) + 1e-9],
         }
 
     def build_report_pdf_bytes(self, req: InverseRecoInputs, recommendation: Dict[str, Any]) -> bytes:

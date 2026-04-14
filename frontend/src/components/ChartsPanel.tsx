@@ -24,6 +24,18 @@ function flattenSurface(payload: SurfacePayload, material: string): [number, num
   return out
 }
 
+function surfaceRange(payload: SurfacePayload) {
+  const all = ['TPU', 'Multi', 'PETG'].flatMap((m) => flattenSurface(payload, m))
+  const xs = all.map((d) => d[0])
+  const ys = all.map((d) => d[1])
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys),
+  }
+}
+
 function buildSurfaceOption(title: string, zName: string, surfaces: SurfacePayload, points: Array<{ name: string; material: string; value: [number, number, number] }>) {
   const series: any[] = []
   ;['TPU', 'Multi', 'PETG'].forEach((m) => {
@@ -33,7 +45,7 @@ function buildSurfaceOption(title: string, zName: string, surfaces: SurfacePaylo
       name: `${m} 曲面`,
       data,
       wireframe: { show: false },
-      itemStyle: { opacity: 0.5, color: MAT_COLORS[m] },
+      itemStyle: { opacity: 0.52, color: MAT_COLORS[m] },
       shading: 'lambert',
     })
   })
@@ -45,26 +57,36 @@ function buildSurfaceOption(title: string, zName: string, surfaces: SurfacePaylo
       type: 'scatter3D',
       name: `${m} 标注`,
       data: sub.map((p) => ({ name: `${p.name}(${m})`, value: p.value })),
-      symbolSize: 12,
+      symbolSize: 11,
       itemStyle: { color: '#ffffff', borderColor: MAT_COLORS[m], borderWidth: 2 },
-      label: { show: true, formatter: '{b}' },
+      label: { show: true, formatter: '{b}', color: '#ffffff', backgroundColor: 'rgba(10,20,40,.55)', padding: [2, 5], borderRadius: 4 },
     })
   })
 
+  const range = surfaceRange(surfaces)
+
   return {
-    title: { text: title, left: 10, top: 8, textStyle: { color: '#dfe6ff', fontSize: 14 } },
-    tooltip: { formatter: (p: any) => `${p.seriesName}<br/>step=${p.value?.[0]?.toFixed?.(4)} mm<br/>height=${p.value?.[1]?.toFixed?.(3)}<br/>${zName}=${p.value?.[2]?.toFixed?.(4)}` },
+    title: { text: title, left: 10, top: 8, textStyle: { color: '#e9f1ff', fontSize: 14 } },
+    tooltip: { formatter: (p: any) => `${p.seriesName}<br/>step=${p.value?.[0]?.toFixed?.(4)} mm<br/>height=${(p.value?.[1] * 100)?.toFixed?.(0)}%<br/>${zName}=${p.value?.[2]?.toFixed?.(4)}` },
     legend: { bottom: 8, textStyle: { color: '#dfe6ff' } },
-    xAxis3D: { type: 'value', name: '设计步距(mm)' },
-    yAxis3D: { type: 'value', name: '牙槽骨高度' },
-    zAxis3D: { type: 'value', name: zName },
+    xAxis3D: { type: 'value', name: '设计步距(mm)', min: range.minX, max: range.maxX, axisLabel: { color: '#e5eeff' }, axisLine: { lineStyle: { color: '#9fb6dd' } } },
+    yAxis3D: { type: 'value', name: '牙槽骨高度', min: range.minY, max: range.maxY, axisLabel: { color: '#e5eeff', formatter: (v: number) => `${Math.round(v * 100)}%` }, axisLine: { lineStyle: { color: '#9fb6dd' } } },
+    zAxis3D: { type: 'value', name: zName, axisLabel: { color: '#e5eeff' }, axisLine: { lineStyle: { color: '#9fb6dd' } } },
     grid3D: {
       boxWidth: 110,
       boxDepth: 92,
       boxHeight: 75,
-      environment: '#111b2d',
-      viewControl: { projection: 'orthographic', alpha: 18, beta: 220, rotateSensitivity: 1, zoomSensitivity: 1, panSensitivity: 1 },
-      light: { main: { intensity: 1 }, ambient: { intensity: 0.55 } },
+      environment: '#0f1a2c',
+      viewControl: {
+        projection: 'orthographic',
+        alpha: 20,
+        beta: 222,
+        distance: 170,
+        rotateSensitivity: 0,
+        zoomSensitivity: 0,
+        panSensitivity: 0,
+      },
+      light: { main: { intensity: 1.05 }, ambient: { intensity: 0.58 } },
     },
     series,
     backgroundColor: 'transparent',
@@ -76,8 +98,8 @@ function buildLineOption(title: string, yName: string, data: RecommendV1Response
     title: { text: title, left: 10, top: 8, textStyle: { color: '#dfe6ff', fontSize: 14 } },
     tooltip: { trigger: 'axis' },
     legend: { bottom: 4, textStyle: { color: '#dfe6ff' } },
-    xAxis: { type: 'value', name: '设计步距(mm)', axisLabel: { color: '#dbe7ff' } },
-    yAxis: { type: 'value', name: yName, axisLabel: { color: '#dbe7ff' } },
+    xAxis: { type: 'value', name: '设计步距(mm)', axisLabel: { color: '#dbe7ff' }, axisLine: { lineStyle: { color: '#9fb6dd' } } },
+    yAxis: { type: 'value', name: yName, axisLabel: { color: '#dbe7ff' }, axisLine: { lineStyle: { color: '#9fb6dd' } } },
     series: data.map((row) => ({
       name: row.material,
       type: 'line',
@@ -93,6 +115,10 @@ function buildLineOption(title: string, yName: string, data: RecommendV1Response
 export default function ChartsPanel({ data }: Props) {
   if (!data) return <PanelCard title="图表区"><div className="compact-note">请先点击“更新推荐”。</div></PanelCard>
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
+  const h3d = isMobile ? 300 : 390
+  const h2d = isMobile ? 240 : 290
+
   const score3d = buildSurfaceOption('综合评分 3D 拟合曲面（3材料同图）', 'Score', data.charts.surfaces.score, data.charts.recommend_points.score)
   const pdl3d = buildSurfaceOption('PDL应力极值 3D 拟合曲面', 'PDL_max(kPa)', data.charts.surfaces.pdl_max, data.charts.recommend_points.pdl_max)
   const z173d = buildSurfaceOption('17牙压低量 3D 拟合曲面', 'Disp_Z_17(mm)', data.charts.surfaces.disp_z17, data.charts.recommend_points.disp_z17)
@@ -103,12 +129,12 @@ export default function ChartsPanel({ data }: Props) {
 
   return (
     <div className="chart-grid">
-      <PanelCard title="综合评分 3D"><ReactECharts option={score3d} style={{ height: 390 }} /></PanelCard>
-      <PanelCard title="PDL 3D"><ReactECharts option={pdl3d} style={{ height: 390 }} /></PanelCard>
-      <PanelCard title="17牙压低量 3D"><ReactECharts option={z173d} style={{ height: 390 }} /></PanelCard>
-      <PanelCard title="17牙近远中位移 3D"><ReactECharts option={x173d} style={{ height: 390 }} /></PanelCard>
-      <PanelCard title="综合评分 2D"><ReactECharts option={score2d} style={{ height: 290 }} /></PanelCard>
-      <PanelCard title="PDL 2D"><ReactECharts option={pdl2d} style={{ height: 290 }} /></PanelCard>
+      <PanelCard title="综合评分 3D"><ReactECharts option={score3d} style={{ height: h3d }} /></PanelCard>
+      <PanelCard title="PDL 3D"><ReactECharts option={pdl3d} style={{ height: h3d }} /></PanelCard>
+      <PanelCard title="17牙压低量 3D"><ReactECharts option={z173d} style={{ height: h3d }} /></PanelCard>
+      <PanelCard title="17牙近远中位移 3D"><ReactECharts option={x173d} style={{ height: h3d }} /></PanelCard>
+      <PanelCard title="综合评分 2D"><ReactECharts option={score2d} style={{ height: h2d }} /></PanelCard>
+      <PanelCard title="PDL 2D"><ReactECharts option={pdl2d} style={{ height: h2d }} /></PanelCard>
     </div>
   )
 }

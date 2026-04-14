@@ -31,6 +31,8 @@ input[type='number']{width:100%;padding:8px 10px;border-radius:10px;border:1px s
 .panel-card__body { padding: 14px 16px 16px; }
 .field { display: grid; gap: 6px; margin-bottom: 10px; }
 .field span { color: var(--muted); font-size: 13px; }
+.field-inline { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.field-inline input[type='checkbox']{ margin-right:6px; }
 .field input[type='range'] { width: 100%; }
 .compact-note { color: var(--muted); font-size: 13px; line-height: 1.6; }
 .button-row { display: flex; gap: 10px; position: sticky; bottom: 0; padding-top: 10px; background: linear-gradient(180deg, rgba(9,17,31,0), rgba(9,17,31,0.92) 42%, rgba(9,17,31,0.98)); z-index: 3; }
@@ -58,7 +60,7 @@ input[type='number']{width:100%;padding:8px 10px;border-radius:10px;border:1px s
   .app-header h1 { font-size: 20px; }
   .panel-card__header { padding: 10px 12px 8px; }
   .panel-card__body { padding: 10px 12px 12px; }
-  .scene-wrap { height: 320px; }
+  .scene-wrap { height: 280px; }
   .metric-grid { grid-template-columns: 1fr; }
   .button-row { position: static; }
   .btn { width: 100%; }

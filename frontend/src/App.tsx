@@ -7,7 +7,7 @@ import { exportRecommendReport, fetchRecommendMeta, previewRecommend } from './u
 import type { InverseRecoInputs, RecommendV1Response } from './types'
 
 const defaultInputs: InverseRecoInputs = {
-  alveolar_height: 0.66,
+  alveolar_height: 0.65,
   target_intrusion_mm: 0.12,
   risk_limit_kpa: 18,
   score_weights: { target: 0.5, risk: 0.35, side: 0.15 },

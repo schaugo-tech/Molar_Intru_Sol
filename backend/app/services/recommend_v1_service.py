@@ -163,8 +163,9 @@ class RecommendV1Service:
         cand['score_target'] = self._norm(cand['Disp_Z_17'])
         cand['target_deviation_mm'] = np.nan
         if inputs.target_intrusion_mm is not None:
-            sigma = max(0.008, 0.15 * float(inputs.target_intrusion_mm))
-            cand['score_target'] = np.exp(-((cand['Disp_Z_17'] - inputs.target_intrusion_mm) / sigma) ** 2)
+            sigma = max(0.01, 0.12 * float(inputs.target_intrusion_mm))
+            diff = (cand['Disp_Z_17'] - inputs.target_intrusion_mm) / sigma
+            cand['score_target'] = 1.0 / (1.0 + np.exp(-diff))
             cand['target_deviation_mm'] = cand['Disp_Z_17'] - inputs.target_intrusion_mm
 
         cand['within_risk_limit'] = True
@@ -174,7 +175,7 @@ class RecommendV1Service:
             cand['score_risk'] = 1.0 / (1.0 + np.exp((cand['PDL_max (kPa)'] - inputs.risk_limit_kpa) / sigma_risk))
             cand['within_risk_limit'] = cand['PDL_max (kPa)'] <= inputs.risk_limit_kpa
 
-        cand['phi_side'] = 0.50 * self._norm(cand['AbsDisp_X_17']) + 0.20 * self._norm(cand['AbsDisp_Y_17']) + 0.30 * self._norm(cand['AdjDriftRMS'])
+        cand['phi_side'] = self._norm(cand['AbsDisp_X_17'])
         cand['score_side'] = 1.0 - cand['phi_side']
 
         weights = inputs.score_weights or {'target': 0.50, 'risk': 0.35, 'side': 0.15}
@@ -213,9 +214,9 @@ class RecommendV1Service:
             'charts': charts,
             'scoring_formula': {
                 'comprehensive_score': '100 * (w_target*score_target + w_risk*score_risk + w_side*score_side)',
-                'score_target': 'exp(-((Disp_Z_17-target)/sigma)^2) 或归一化 Disp_Z_17',
-                'score_risk': 'sigmoid(PDL_max vs risk_limit) 或反向归一化 PDL_max',
-                'score_side': '1 - (0.50*|Disp_X_17| + 0.20*|Disp_Y_17| + 0.30*AdjDriftRMS)_norm',
+                'score_target': 'sigmoid((Disp_Z_17-target)/sigma_target) 或归一化 Disp_Z_17（越大越优）',
+                'score_risk': 'sigmoid(-(PDL_max-risk_limit)/sigma_risk) 或反向归一化 PDL_max（越小越优）',
+                'score_side': '1 - norm(|Disp_X_17|)（越接近0越优）',
                 'weights_used': scalars.score_weights or {'target': 0.50, 'risk': 0.35, 'side': 0.15},
             },
             'grid': cand.to_dict('records'),

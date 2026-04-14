@@ -40,47 +40,23 @@ class ReportRequest(BaseModel):
     analysis: Dict
 
 
-# ===== V1 推荐引擎输入 =====
-
-class TreatmentNeedInput(BaseModel):
-    ahi_band: Optional[str] = None
-
-
-class TMJSensitivityInput(BaseModel):
-    pain_vas: Optional[float] = None
-    joint_state: Optional[str] = None
-    mouth_opening_mm: Optional[float] = None
-    mouth_opening_state: Optional[str] = None
-
-
-class PeriodontalInput(BaseModel):
-    mobility_state: Optional[str] = None
-    bone_loss_state: Optional[str] = None
-
-
-class OcclusalNeedInput(BaseModel):
-    deep_overbite: bool = False
-    occlusal_interference: bool = False
-    anterior_crossbite: bool = False
-
-
-class FrontendInputs(BaseModel):
-    treatment_need: TreatmentNeedInput
-    tmj_sensitivity: TMJSensitivityInput
-    periodontal: PeriodontalInput
-    occlusal_need: OcclusalNeedInput
+class InverseRecoInputs(BaseModel):
+    alveolar_height: float = Field(..., description='牙槽骨高度（离散仿真高度范围内）')
+    target_intrusion_mm: Optional[float] = Field(None, description='希望的真实压低量（17牙，mm）')
+    risk_limit_kpa: Optional[float] = Field(None, description='允许的 PDL 应力上限（kPa）')
+    score_weights: Optional[Dict[str, float]] = Field(None, description='评分权重：target/risk/side')
 
 
 class RecommendV1Request(BaseModel):
-    inputs: FrontendInputs
-    mp_grid: Optional[List[float]] = None
-    vo_grid: Optional[List[float]] = None
+    inputs: InverseRecoInputs
+    search_points: int = 301
+    surface_grid_size: int = 42
 
 
 class RecommendV1Response(BaseModel):
     status: str
-    scalars: Dict[str, float]
     best: Dict[str, Any]
     alternatives: List[Dict[str, Any]]
     charts: Dict[str, Any]
+    scoring_formula: Dict[str, Any]
     meta: Dict[str, Any]

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
@@ -29,12 +30,27 @@ class FitModel:
 class StudyService:
     def __init__(self):
         base_dir = Path(__file__).resolve().parents[2]
-        primary = base_dir / 'data' / '关节盘及牙齿应力数据.xlsx'
-        fallback = base_dir / 'data' / 'P491310E02_关节盘及牙齿应力数据V250225.xlsx'
-        self.data_path = primary if primary.exists() else fallback
-        self.raw_df = self._load_raw_data()
-        self.models = self._fit_models()
-        self.meta = self._build_meta()
+        configured = os.getenv('STUDY_DATA_XLSX_PATH', '').strip()
+        if configured:
+            p = Path(configured).expanduser()
+            self.data_path = p if p.is_absolute() else base_dir / p
+        else:
+            self.data_path = base_dir / 'data' / '关节盘及牙齿应力数据.xlsx'
+
+        self.ready = self.data_path.exists()
+        if self.ready:
+            self.raw_df = self._load_raw_data()
+            self.models = self._fit_models()
+            self.meta = self._build_meta()
+        else:
+            self.raw_df = pd.DataFrame()
+            self.models = {}
+            self.meta = {
+                'study_name': 'MAD 生物力学交互式设计工具 V2',
+                'data_file': str(self.data_path),
+                'status': 'disabled',
+                'message': 'study 数据文件不存在；如需启用 /study 接口，请配置 STUDY_DATA_XLSX_PATH 或补充数据文件。',
+            }
 
     def _load_raw_data(self) -> pd.DataFrame:
         if not self.data_path.exists():
@@ -118,10 +134,15 @@ class StudyService:
             },
         }
 
+    def _ensure_ready(self):
+        if not self.ready:
+            raise RuntimeError(f"study 服务未启用：{self.meta.get('message')}")
+
     def get_meta(self):
         return self.meta
 
     def get_raw_records(self):
+        self._ensure_ready()
         return self.raw_df.to_dict(orient='records')
 
     def _predict_frame(self, mp_values: np.ndarray, vo_values: np.ndarray) -> pd.DataFrame:
@@ -216,6 +237,7 @@ class StudyService:
         return df.sort_values(['overall_score', 'score_safety'], ascending=False).iloc[0].to_dict()
 
     def analyze(self, req: AnalysisRequest):
+        self._ensure_ready()
         mp_values = np.arange(50, req.constraints.max_mp + 1e-9, req.grid_step_mp)
         vo_values = np.arange(3, req.constraints.max_vo + 1e-9, req.grid_step_vo)
         grid = self._apply_scoring(self._predict_frame(mp_values, vo_values), req)
@@ -252,6 +274,7 @@ class StudyService:
         return {'selected_text': selected_text, 'advice': advice, 'best_text': best_text}
 
     def build_report(self, req):
+        self._ensure_ready()
         analysis = req.analysis
         selected = analysis['selected']
         candidates = analysis.get('candidates', [])
@@ -269,7 +292,7 @@ class StudyService:
             f"- 限制因子: {selected['limiting_factor']}",
             '',
             '## 拟合与评分说明',
-            '- 数据源：backend/data/关节盘及牙齿应力数据.xlsx（离散实验点）。',
+            f'- 数据源：{self.data_path}（离散实验点）。',
             '- 拟合：二次多项式回归（tmj、pdl_lower、pdl_upper）。',
             '- 评分：MP 越大越好、VO 越大越好、应力越小越好。通过可调公式引入“高推进-高风险”惩罚，实现非单调权衡。',
             '',

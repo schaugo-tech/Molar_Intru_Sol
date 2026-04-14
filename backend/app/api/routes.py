@@ -75,21 +75,17 @@ def recommend_v1_meta():
 @router.post('/v1/recommend/preview')
 def recommend_v1_preview(req: RecommendV1Request):
     try:
-        scalars = recommend_v1_service.map_frontend(req.inputs)
         result = recommend_v1_service.recommend(
-            scalars=scalars,
-            mp_grid=req.mp_grid,
-            vo_grid=req.vo_grid,
+            scalars=req.inputs,
+            search_points=req.search_points,
+            surface_grid_size=req.surface_grid_size,
         )
-        charts = recommend_v1_service.build_chart_payload(result)
-        option_templates = recommend_v1_service.build_echarts_gl_option_templates(charts)
         return {
             'status': result['status'],
-            'scalars': scalars.__dict__,
             'best': result['best'],
             'alternatives': result['alternatives'],
-            'charts': charts,
-            'option_templates': option_templates,
+            'charts': result['charts'],
+            'scoring_formula': result['scoring_formula'],
             'meta': recommend_v1_service.get_meta(),
         }
     except Exception as exc:
@@ -99,13 +95,12 @@ def recommend_v1_preview(req: RecommendV1Request):
 @router.post('/v1/recommend/report', response_class=Response)
 def recommend_v1_report(req: RecommendV1Request):
     try:
-        scalars = recommend_v1_service.map_frontend(req.inputs)
         result = recommend_v1_service.recommend(
-            scalars=scalars,
-            mp_grid=req.mp_grid,
-            vo_grid=req.vo_grid,
+            scalars=req.inputs,
+            search_points=req.search_points,
+            surface_grid_size=req.surface_grid_size,
         )
-        pdf_bytes = recommend_v1_service.build_report_pdf_bytes(req.inputs, result, scalars)
+        pdf_bytes = recommend_v1_service.build_report_pdf_bytes(req.inputs, result)
         return Response(
             content=pdf_bytes,
             media_type='application/pdf',

@@ -5,8 +5,10 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import * as THREE from 'three'
 
 type Props = {
-  selectedMp: number
-  selectedVo: number
+  selectedStep: number
+  selectedHeight: number
+  motion17?: { disp_x_mm: number; disp_y_mm: number; disp_z_mm: number }
+  material?: string
 }
 
 type ManifestItem = {
@@ -56,15 +58,12 @@ function ModelPart({ item, offset = [0, 0, 0], withLocalAxes = false }: { item: 
   return <primitive object={scene} scale={1.1} position={offset} />
 }
 
-function AnatomyModel({ selectedMp, selectedVo, manifest }: Props & { manifest: ManifestItem[] }) {
-  // 运动幅度缩放系数（按产品反馈扩大 10 倍）：
-  // - MP: 每 +1% 前伸，对应 0.72 的模型位移（原 0.072）
-  // - VO: 每 +1mm 开口，对应 1.60 的模型位移（原 0.16）
-  // 若后续还需调整，只改这两个系数即可，其他逻辑无需改动。
-  const mpShift = (selectedMp - 50) * 0.72
-  const voDrop = (selectedVo - 3) * 1.6
-  // 按反馈修正方向符号：MP 与 VO 的运动方向均做正负号翻转
-  const jawOffset = useMemo(() => [0, -mpShift, voDrop] as [number, number, number], [mpShift, voDrop])
+function AnatomyModel({ selectedStep, motion17, manifest }: Props & { manifest: ManifestItem[] }) {
+  const fallbackShift = (selectedStep - 0.1) * 36
+  const mx = motion17?.disp_x_mm ?? 0
+  const my = motion17?.disp_y_mm ?? 0
+  const mz = motion17?.disp_z_mm ?? 0
+  const jawOffset = useMemo(() => [mx * 22, -my * 22 - fallbackShift, mz * 24] as [number, number, number], [mx, my, mz, fallbackShift])
 
   return (
     <group rotation={[0, 0, -Math.PI / 2]}>
@@ -99,7 +98,7 @@ function SceneEnvironment() {
   return null
 }
 
-export default function AnatomyScene({ selectedMp, selectedVo }: Props) {
+export default function AnatomyScene({ selectedStep, selectedHeight, motion17, material }: Props) {
   const [manifest, setManifest] = useState<ManifestItem[]>([])
 
   useEffect(() => {
@@ -109,6 +108,7 @@ export default function AnatomyScene({ selectedMp, selectedVo }: Props) {
 
   return (
     <div className="scene-wrap scene-wrap--bright">
+      <div style={{ position: 'absolute', zIndex: 5, right: 16, top: 12 }} className="scene-badge">材料: {material ?? '-'} · height {selectedHeight.toFixed(2)}</div>
       <Canvas
         orthographic
         camera={{ position: [0, -12, -8], zoom: 85 }}
@@ -135,7 +135,7 @@ export default function AnatomyScene({ selectedMp, selectedVo }: Props) {
         <Suspense fallback={null}>
           {manifest.length > 0 ? (
             <Bounds fit clip observe margin={1.18}>
-              <AnatomyModel selectedMp={selectedMp} selectedVo={selectedVo} manifest={manifest} />
+              <AnatomyModel selectedStep={selectedStep} selectedHeight={selectedHeight} motion17={motion17} material={material} manifest={manifest} />
             </Bounds>
           ) : null}
         </Suspense>

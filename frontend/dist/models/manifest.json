@@ -1,0 +1,11 @@
+{
+  "files": [
+	{ "name": "Maxilla", "file": "maxilla.glb",  "color": "#aea5a2", "style": "Standard", "opacity": 0.95 },
+	{ "name": "Mandible", "file": "mandible.glb",  "color": "#aea5a2", "style": "Standard", "opacity": 1.0 },    
+	{ "name": "Teeth_U", "file": "teeth_upper.glb",  "color": "#edede8", "style": "Standard", "opacity": 1.0 },
+    { "name": "Teeth_L", "file": "teeth_lower.glb",  "color": "#edede8", "style": "Standard", "opacity": 1.0 }, 
+    { "name": "颊肌", "file": "muscle_cheeks.glb",  "color": "#372cce", "style": "Wireframe", "opacity": 0.9 }, 
+    { "name": "口周匝肌", "file": "muscle_lip.glb",  "color": "#369137", "style": "Wireframe", "opacity": 0.95 }, 
+    { "name": "其他面部肌肉", "file": "muscle_others.glb",  "color": "#7aa861", "style": "Physical", "opacity": 0.3 }
+  ]
+}

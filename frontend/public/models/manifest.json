@@ -1,0 +1,16 @@
+{
+  "files": [
+	{ "name": "Maxilla (healthy)", "file": "maxilary_100_fin.glb",  "color": "#bfa6bb", "style": "Standard", "opacity": 1.0 },
+	{ "name": "Maxilla (1/3)", "file": "maxilary_66_fin.glb",  "color": "#bfa6bb", "style": "Standard", "opacity": 1.0, "visible": false  },
+	{ "name": "Maxilla (1/3~1/2)", "file": "maxilary_58_fin.glb",  "color": "#bfa6bb", "style": "Standard", "opacity": 1.0, "visible": false },
+	{ "name": "Maxilla (1/2)", "file": "maxilary_50_fin.glb",  "color": "#bfa6bb", "style": "Standard", "opacity": 1.0, "visible": false },
+	{ "name": "Mandible", "file": "mandilular.glb",  "color": "#aea5a2", "style": "Standard", "opacity": 0.4 },    
+	{ "name": "Teeth_U", "file": "teeth_U.glb",  "color": "#edede8", "style": "Physical", "opacity": 1.0 },
+    { "name": "Teeth_L", "file": "teeth_L.glb",  "color": "#edede8", "style": "Physical", "opacity": 0.4 }, 
+    { "name": "PDL_U (healthy)", "file": "PDL_U_100.glb",  "color": "#372cce", "style": "Standard", "opacity": 0.4 }, 
+    { "name": "PDL_U (1/3)", "file": "PDL_U_66.glb",  "color": "#372cce", "style": "Standard", "opacity": 0.4, "visible": false  }, 
+    { "name": "PDL_U (1/3~1/2)", "file": "PDL_U_58.glb",  "color": "#372cce", "style": "Standard", "opacity": 0.4, "visible": false  }, 
+    { "name": "PDL_U (1/2)", "file": "PDL_U_50.glb",  "color": "#372cce", "style": "Standard", "opacity": 0.4, "visible": false  }, 
+	{ "name": "PDL_L", "file": "PDL_L.glb",  "color": "#372cce", "style": "Standard", "opacity": 0.1 }
+  ]
+}

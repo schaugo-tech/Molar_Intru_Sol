@@ -76,7 +76,7 @@ function AutoFitToUpperTeeth({ targetRef }: { targetRef: React.RefObject<THREE.G
   const bounds = useBounds()
   useEffect(() => {
     if (targetRef.current) {
-      bounds.refresh(targetRef.current).fit()
+      bounds.refresh(targetRef.current).clip().fit()
     }
   }, [bounds, targetRef])
   return null
@@ -85,14 +85,14 @@ function AutoFitToUpperTeeth({ targetRef }: { targetRef: React.RefObject<THREE.G
 function AnatomyModel({ motion17, manifest }: Props & { manifest: ManifestItem[] }) {
   const teethURef = useRef<THREE.Group>(null!)
   const zLift = (motion17?.disp_z_mm ?? 0) * 20
-  const yRotRad = -((motion17?.disp_x_mm ?? 0) * 200 * Math.PI) / 180
+  const xRotRad = -((motion17?.disp_x_mm ?? 0) * 500 * Math.PI) / 180
 
   return (
-    <group rotation={[0, 0, -Math.PI / 2]}>
+    <group>
       {manifest.map((item) => {
         const isUpperTeeth = item.file.includes('teeth_U') || item.file.includes('teeth_upper')
         const offset: [number, number, number] = isUpperTeeth ? [0, 0, zLift] : [0, 0, 0]
-        const rotation: [number, number, number] = isUpperTeeth ? [0, yRotRad, 0] : [0, 0, 0]
+        const rotation: [number, number, number] = isUpperTeeth ? [xRotRad, 0, 0] : [0, 0, 0]
         return (
           <ModelPart
             key={item.file}
@@ -141,11 +141,11 @@ export default function AnatomyScene({ selectedStep, selectedHeight, motion17, m
       <div style={{ position: 'absolute', zIndex: 5, right: 16, top: 12 }} className="scene-badge">材料: {material ?? '-'} · height {selectedHeight.toFixed(2)} · step {selectedStep.toFixed(2)}</div>
       <Canvas
         orthographic
-        camera={{ position: [0, -12, -8], zoom: 85 }}
+        camera={{ position: [0, 0, 12], zoom: 85 }}
         gl={{ antialias: true }}
         dpr={[1, 2]}
         onCreated={({ gl, camera }) => {
-          camera.up.set(0, 0, 1)
+          camera.up.set(0, -1, 0)
           camera.lookAt(0, 0, 0)
           camera.updateProjectionMatrix()
           gl.outputColorSpace = THREE.SRGBColorSpace
@@ -163,7 +163,7 @@ export default function AnatomyScene({ selectedStep, selectedHeight, motion17, m
 
         <Suspense fallback={null}>
           {manifest.length > 0 ? (
-            <Bounds fit clip observe margin={1.18}>
+            <Bounds margin={1.05}>
               <AnatomyModel selectedStep={selectedStep} selectedHeight={selectedHeight} motion17={motion17} material={material} manifest={manifest} />
             </Bounds>
           ) : null}

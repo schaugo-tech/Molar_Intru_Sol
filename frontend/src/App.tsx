@@ -83,7 +83,7 @@ export default function App() {
       ${result.alternatives.map((x, i) => `<tr><td>${i + 1}</td><td>${x.material}</td><td>${x.planned_intrusion_mm.toFixed(3)} mm</td><td>${x.ComprehensiveScore.toFixed(2)}</td></tr>`).join('')}
     </tbody></table>
     <h2>图表证据（3D/2D）</h2>
-    <div class='grid'>${['综合评分3D','PDL极值3D','17牙压低量3D','17牙近远中位移3D','综合评分2D','PDL极值2D'].map((t, i) => imgs[i] ? `<div style='break-inside:avoid'><div style='font-size:13px;font-weight:600;color:#344f7a;margin:0 0 6px'>${t}</div><img class='img' src='${imgs[i]}'/></div>` : '').join('')}</div>
+    <div class='grid'>${['综合评分3D','PDL极值3D','17牙压低量3D','17牙近远中位移3D','综合评分2D','17牙压低实现量2D','PDL极值2D'].map((t, i) => imgs[i] ? `<div style='break-inside:avoid'><div style='font-size:13px;font-weight:600;color:#344f7a;margin:0 0 6px'>${t}</div><img class='img' src='${imgs[i]}'/></div>` : '').join('')}</div>
     </body></html>`
 
     const w = window.open('', '_blank')
@@ -105,9 +105,9 @@ export default function App() {
     <div className="app-shell">
       <header className="app-header">
         <div>
-          <div className="eyebrow">Posterior Intrusion Recommender</div>
-          <h1>后牙压低逆向推荐系统</h1>
-          <p>输入牙槽骨高度 + 目标压低量/风险上限，输出材料（TPU/Multi/PETG）与设计步距，并给出多曲面证据。</p>
+          <div className="eyebrow">Parametric Analysis for the Biomechanics of Posterior Tooth Intrusion</div>
+          <h1>后牙压低生物力学参数化交互分析系统</h1>
+          <p>基于不同牙槽骨高度与矫治器材料条件的三维有限元研究</p>
         </div>
         <div className="header-note">
           <div>引擎版本：NHY_V260414</div>

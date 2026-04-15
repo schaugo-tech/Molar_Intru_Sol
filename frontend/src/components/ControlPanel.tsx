@@ -1,65 +1,49 @@
-import type { FrontendInputs } from '../types'
+import type { InverseRecoInputs } from '../types'
 import PanelCard from './PanelCard'
 
 type Props = {
-  inputs: FrontendInputs
+  inputs: InverseRecoInputs
   loading: boolean
-  onInputsChange: (next: FrontendInputs) => void
+  onInputsChange: (v: InverseRecoInputs) => void
   onAnalyze: () => void
   onReset: () => void
 }
 
 export default function ControlPanel({ inputs, loading, onInputsChange, onAnalyze, onReset }: Props) {
+  const heightPct = Math.round(inputs.alveolar_height * 100)
+  const hasTarget = inputs.target_intrusion_mm !== undefined
+  const hasRisk = inputs.risk_limit_kpa !== undefined
+  const w = inputs.score_weights ?? { target: 0.5, risk: 0.5, side: 0.5 }
+
   return (
     <div className="control-stack">
-      <PanelCard title="治疗需求强度">
+      <PanelCard title="逆向推荐输入">
         <label className="field">
-          <span>AHI 次数（次/小时）</span>
-          <select value={inputs.treatment_need.ahi_band ?? '15to30'} onChange={(e) => onInputsChange({ ...inputs, treatment_need: { ...inputs.treatment_need, ahi_band: e.target.value as any } })}>
-            <option value="lt5">&lt; 5（无症状者无需干预）</option>
-            <option value="5to15">5 ~ 15</option>
-            <option value="15to30">15 ~ 30</option>
-            <option value="gt30">&gt; 30</option>
-          </select>
+          <span>牙槽骨高度（必选）：{heightPct}%</span>
+          <input type="range" min={50} max={100} step={5} value={heightPct} onChange={(e) => onInputsChange({ ...inputs, alveolar_height: Number(e.target.value) / 100 })} />
+        </label>
+
+        <label className="field field-inline">
+          <span><input type="checkbox" checked={hasTarget} onChange={(e) => onInputsChange({ ...inputs, target_intrusion_mm: e.target.checked ? 0.10 : undefined })} /> 目标压低量</span>
+          <span>{hasTarget ? `${inputs.target_intrusion_mm?.toFixed(2)} mm` : '默认 0.10 mm'}</span>
+        </label>
+        <label className="field">
+          <input type="range" min={0.05} max={0.20} step={0.01} value={inputs.target_intrusion_mm ?? 0.10} disabled={!hasTarget} onChange={(e) => onInputsChange({ ...inputs, target_intrusion_mm: Number(e.target.value) })} />
+        </label>
+
+        <label className="field field-inline">
+          <span><input type="checkbox" checked={hasRisk} onChange={(e) => onInputsChange({ ...inputs, risk_limit_kpa: e.target.checked ? 20 : undefined })} /> 风险上限</span>
+          <span>{hasRisk ? `${inputs.risk_limit_kpa?.toFixed(0)} kPa` : '默认 20 kPa'}</span>
+        </label>
+        <label className="field">
+          <input type="range" min={5} max={30} step={1} value={inputs.risk_limit_kpa ?? 20} disabled={!hasRisk} onChange={(e) => onInputsChange({ ...inputs, risk_limit_kpa: Number(e.target.value) })} />
         </label>
       </PanelCard>
 
-      <PanelCard title="关节敏感度">
-        <label className="field">
-          <span>疼痛 VAS：{inputs.tmj_sensitivity.pain_vas ?? 3}</span>
-          <input type="range" min={0} max={10} step={1} value={inputs.tmj_sensitivity.pain_vas ?? 3} onChange={(e) => onInputsChange({ ...inputs, tmj_sensitivity: { ...inputs.tmj_sensitivity, pain_vas: Number(e.target.value) } })} />
-        </label>
-        <label className="field">
-          <span>关节状态</span>
-          <select value={inputs.tmj_sensitivity.joint_state ?? 'none'} onChange={(e) => onInputsChange({ ...inputs, tmj_sensitivity: { ...inputs.tmj_sensitivity, joint_state: e.target.value as any } })}>
-            <option value="none">none</option><option value="click">click</option><option value="lock">lock</option>
-          </select>
-        </label>
-        <label className="field">
-          <span>开口状态</span>
-          <select value={inputs.tmj_sensitivity.mouth_opening_state ?? 'normal'} onChange={(e) => onInputsChange({ ...inputs, tmj_sensitivity: { ...inputs.tmj_sensitivity, mouth_opening_state: e.target.value as any } })}>
-            <option value="normal">normal</option><option value="mildly_limited">mildly_limited</option><option value="limited">limited</option>
-          </select>
-        </label>
-      </PanelCard>
-
-      <PanelCard title="前牙牙周敏感度">
-        <label className="field"><span>前牙松动度</span>
-          <select value={inputs.periodontal.mobility_state ?? 'stable'} onChange={(e) => onInputsChange({ ...inputs, periodontal: { ...inputs.periodontal, mobility_state: e.target.value as any } })}>
-            <option value="stable">stable</option><option value="mild">mild</option><option value="obvious">obvious</option>
-          </select>
-        </label>
-        <label className="field"><span>骨丧失状态</span>
-          <select value={inputs.periodontal.bone_loss_state ?? 'none'} onChange={(e) => onInputsChange({ ...inputs, periodontal: { ...inputs.periodontal, bone_loss_state: e.target.value as any } })}>
-            <option value="none">none</option><option value="low">low</option><option value="medium">medium</option><option value="high">high</option>
-          </select>
-        </label>
-      </PanelCard>
-
-      <PanelCard title="咬合抬高需求（o）">
-        <label className="field"><span><input type="checkbox" checked={inputs.occlusal_need.deep_overbite} onChange={(e) => onInputsChange({ ...inputs, occlusal_need: { ...inputs.occlusal_need, deep_overbite: e.target.checked } })} /> 深覆牙合</span></label>
-        <label className="field"><span><input type="checkbox" checked={inputs.occlusal_need.occlusal_interference} onChange={(e) => onInputsChange({ ...inputs, occlusal_need: { ...inputs.occlusal_need, occlusal_interference: e.target.checked } })} /> 咬合干扰</span></label>
-        <label className="field"><span><input type="checkbox" checked={inputs.occlusal_need.anterior_crossbite} onChange={(e) => onInputsChange({ ...inputs, occlusal_need: { ...inputs.occlusal_need, anterior_crossbite: e.target.checked } })} /> 前牙反牙合</span></label>
+      <PanelCard title="综合评分权重（步进 0.05）">
+        <label className="field"><span>目标达成权重：{(w.target ?? 0.5).toFixed(2)}</span><input type="range" min={0.05} max={0.9} step={0.05} value={w.target ?? 0.5} onChange={(e) => onInputsChange({ ...inputs, score_weights: { ...w, target: Number(e.target.value) } })} /></label>
+        <label className="field"><span>风险控制权重：{(w.risk ?? 0.5).toFixed(2)}</span><input type="range" min={0.05} max={0.9} step={0.05} value={w.risk ?? 0.5} onChange={(e) => onInputsChange({ ...inputs, score_weights: { ...w, risk: Number(e.target.value) } })} /></label>
+        <label className="field"><span>副作用权重：{(w.side ?? 0.5).toFixed(2)}</span><input type="range" min={0.05} max={0.9} step={0.05} value={w.side ?? 0.5} onChange={(e) => onInputsChange({ ...inputs, score_weights: { ...w, side: Number(e.target.value) } })} /></label>
       </PanelCard>
 
       <div className="button-row">
